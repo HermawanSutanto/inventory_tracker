@@ -1,0 +1,1 @@
+enum TransactionType { inTransaction, outTransaction }

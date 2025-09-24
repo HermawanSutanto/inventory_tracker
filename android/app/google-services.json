@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "325737780316",
+    "project_id": "inventory-tracker-78488",
+    "storage_bucket": "inventory-tracker-78488.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:325737780316:android:1ecf51d84e5e0eaf118299",
+        "android_client_info": {
+          "package_name": "com.example.inventory_tracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "325737780316-cll54tbh919hpn0nac45csu0r22asivp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPlL9wI9dmri8u9LNaLSjQ8oPfhL3Y_38"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "325737780316-cll54tbh919hpn0nac45csu0r22asivp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "325737780316-psolampc53dvnpf86o5kp82dbkjm8laa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.inventoryTracker"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:325737780316:android:9b7bad39672bed68118299",
+        "android_client_info": {
+          "package_name": "com.inventory.tracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "325737780316-hlkj8q2cebut5ebbk1to23nmdu7kc8j3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inventory.tracker",
+            "certificate_hash": "4dc1e94e06fd21a4e2f6d097e6d95adc8963a1dd"
+          }
+        },
+        {
+          "client_id": "325737780316-cll54tbh919hpn0nac45csu0r22asivp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPlL9wI9dmri8u9LNaLSjQ8oPfhL3Y_38"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "325737780316-cll54tbh919hpn0nac45csu0r22asivp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "325737780316-psolampc53dvnpf86o5kp82dbkjm8laa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.inventoryTracker"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
