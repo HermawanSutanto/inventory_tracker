@@ -262,6 +262,26 @@ class _MainListProduct extends StatelessWidget {
                       onDetailsSaved: (updatedData) {
                         productProvider.updateProductDetails(updatedData);
                       },
+                      onDelete: (productId) {
+                        productProvider
+                            .deleteProduct(productId)
+                            .then((_) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Produk berhasil dihapus!'),
+                                ),
+                              );
+                            })
+                            .catchError((error) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Gagal menghapus produk: $error',
+                                  ),
+                                ),
+                              );
+                            });
+                      },
                     ),
               );
             },

@@ -25,25 +25,25 @@ class SummaryCard extends StatelessWidget {
 
     // Logika untuk menentukan ikon dan warna berdasarkan judul
     switch (title) {
-      case "Total Products":
+      case "Total Produk":
         iconData = CupertinoIcons.cart_fill;
         iconColor = const Color.fromARGB(255, 249, 132, 37);
         percentageIcon = CupertinoIcons.arrow_up;
         percentageColor = Colors.green;
         break;
-      case "Stok Diperbarui":
+      case "Total Barang Masuk":
         iconData = CupertinoIcons.arrow_down_circle_fill;
         iconColor = Colors.red;
         percentageIcon = CupertinoIcons.arrow_down;
         percentageColor = Colors.red;
         break;
-      case "Stok Menipis":
+      case "Total Stok":
         iconData = CupertinoIcons.square_stack_3d_down_right_fill;
         iconColor = Colors.orange;
         percentageIcon = CupertinoIcons.arrow_down;
         percentageColor = Colors.red;
         break;
-      case "Total Terjual":
+      case "Total Barang Keluar":
         iconData = CupertinoIcons.arrow_up_circle_fill;
         iconColor = Colors.green;
         percentageIcon = CupertinoIcons.arrow_up;

@@ -49,7 +49,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
   }
 
   Future<void> _pickImage() async {
-    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80, // Kompresi kualitas gambar (0-100)
+      maxWidth: 1024, // Batasi lebar maksimal gambar
+    );
     if (image != null) {
       setState(() {
         _selectedImage = image;

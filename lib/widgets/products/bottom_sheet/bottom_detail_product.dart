@@ -21,6 +21,7 @@ class BottomDetailProduct extends StatefulWidget {
   final Function(String productId, int quantity)? onStockOut;
 
   final Function(String productId, int quantity)? onStockIn;
+  final Function(String productId)? onDelete;
 
   final Function(Map<String, dynamic> updatedData)? onDetailsSaved;
 
@@ -36,6 +37,7 @@ class BottomDetailProduct extends StatefulWidget {
     this.onStockIn,
     this.onDetailsSaved,
     this.initialStock = false,
+    this.onDelete, // Tambahkan di constructor
   });
 
   @override
@@ -127,6 +129,40 @@ class _BottomDetailProductState extends State<BottomDetailProduct> {
     });
   }
 
+  void _showDeleteConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Hapus Produk'),
+          content: Text(
+            "Apakah Anda yakin ingin menghapus '${widget.productName}' secara permanen? Semua data transaksi terkait juga akan dihapus.",
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Batal'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Tutup dialog
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Hapus'),
+              onPressed: () {
+                // Panggil callback onDelete
+                widget.onDelete?.call(widget.id);
+
+                // Tutup dialog dan bottom sheet
+                Navigator.of(dialogContext).pop();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -198,8 +234,17 @@ class _BottomDetailProductState extends State<BottomDetailProduct> {
 
   Widget _buildHeaderSection() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center, // Pusatkan judul
+      mainAxisAlignment: MainAxisAlignment.spaceBetween, // Ubah alignment
       children: [
+        // Tombol Hapus (hanya tampil dalam mode display)
+        if (_mode == DetailSheetMode.display)
+          IconButton(
+            onPressed: _showDeleteConfirmationDialog, // Panggil dialog
+            icon: const Icon(CupertinoIcons.trash, color: Colors.red),
+          )
+        else
+          const SizedBox(width: 48), // Placeholder agar judul tetap di tengah
+
         Expanded(
           child: Text(
             widget.productName,
@@ -208,14 +253,12 @@ class _BottomDetailProductState extends State<BottomDetailProduct> {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        Align(
-          alignment: Alignment.topRight,
-          child: IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(
-              CupertinoIcons.clear_thick_circled,
-              color: Colors.grey,
-            ),
+
+        IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            CupertinoIcons.clear_thick_circled,
+            color: Colors.grey,
           ),
         ),
       ],

@@ -35,7 +35,33 @@ class _MainScreenState extends State<MainScreen> {
           final query = _searchQuery.toLowerCase();
           return productName.contains(query);
         }).toList();
-
+    final dynamicSummaryData = [
+      {
+        'title': 'Total Produk',
+        'value': productProvider.totalUniqueProducts.toString(),
+        'percentage': '+0%', // Bisa dikembangkan lebih lanjut
+        'updateDate': 'Terkini',
+      },
+      {
+        'title': 'Total Stok',
+        'value': productProvider.totalStock.toString(),
+        'percentage': '+0%',
+        'updateDate': 'Terkini',
+      },
+      {
+        'title': 'Total Barang Masuk',
+        'value': productProvider.incomingTransactionsToday.toString(),
+        'percentage': '+0%',
+        'updateDate': 'Terkini',
+      },
+      {
+        'title': 'Total Barang Keluar',
+        'value': productProvider.outgoingTransactionsToday.toString(),
+        'percentage': '+0%',
+        'updateDate': 'Terkini',
+      },
+      // ... bisa ditambahkan card lainnya sesuai getter di provider
+    ];
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -45,10 +71,15 @@ class _MainScreenState extends State<MainScreen> {
               const _HeaderSection(), // Widget ini tidak berubah
               const SizedBox(height: 20),
               // Widget ini tidak berubah, masih menggunakan dummy data
-              _SummaryCardsSection(summaryData: summaryData),
+              // _SummaryCardsSection(summaryData: summaryData),
+              _SummaryCardsSection(
+                summaryData: dynamicSummaryData,
+              ), // Gunakan data dinamis
+
               const SizedBox(height: 20),
               const _TransactionHeader(), // Widget ini tidak berubah
               const SizedBox(height: 10),
+
               Expanded(
                 child: _TransactionList(
                   filteredProducts: filteredList,
@@ -173,24 +204,24 @@ class _TransactionHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          "Transactions",
+          "Transaksi Barang",
           style: TextStyle(
             fontSize: 16,
             color: Theme.of(context).colorScheme.onBackground,
             fontWeight: FontWeight.bold,
           ),
         ),
-        GestureDetector(
-          onTap: () {},
-          child: Text(
-            "View All",
-            style: TextStyle(
-              fontSize: 14,
-              color: Theme.of(context).colorScheme.outline,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ),
+        // GestureDetector(
+        //   onTap: () {},
+        //   child: Text(
+        //     "View All",
+        //     style: TextStyle(
+        //       fontSize: 14,
+        //       color: Theme.of(context).colorScheme.outline,
+        //       fontWeight: FontWeight.w400,
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }
@@ -210,6 +241,14 @@ class _TransactionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (filteredProducts.isEmpty) {
+      return const Center(
+        child: Text(
+          'Tidak ada transaksi ditemukan.',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
     return ListView.builder(
       itemCount: filteredProducts.length,
       itemBuilder: (context, int i) {
