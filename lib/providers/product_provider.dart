@@ -63,7 +63,9 @@ class ProductProvider with ChangeNotifier {
   // --- LISTENERS DENGAN PENANGANAN ERROR ---
   void _listenToProducts() {
     _firestore
+        // --- TAMBAHKAN FILTER .where() DI SINI ---
         .collection('products')
+        .where('isActive', isEqualTo: true)
         .snapshots()
         .listen(
           (snapshot) {
@@ -72,7 +74,7 @@ class ProductProvider with ChangeNotifier {
                     .map((doc) => {'id': doc.id, ...doc.data()})
                     .toList();
             _isLoading = false;
-            _errorMessage = null; // Hapus pesan error jika berhasil
+            _errorMessage = null;
             notifyListeners();
           },
           onError: (error) {
@@ -265,37 +267,48 @@ class ProductProvider with ChangeNotifier {
 
   Map<String, dynamic>? findProductByBarcode(String barcode) {
     try {
-      return _allProducts.firstWhere((p) => p['id'] == barcode);
+      // Cari produk di mana field 'barcode' cocok
+      return _allProducts.firstWhere((p) => p['barcode'] == barcode);
     } catch (e) {
-      return null;
+      return null; // Tidak ditemukan
     }
   }
 
   Future<void> addNewProduct({
-    required String id,
+    // 'id' dihilangkan, diganti dengan 'barcode'
+    required String barcode,
     required String name,
     required String category,
     required int initialStock,
-    String? imagePath, // Ganti nama dari imageUrl ke imagePath agar lebih jelas
+    String? imagePath,
   }) async {
+    // 1. Buat dokumen baru di Firestore & biarkan Firestore membuat ID unik
+    final newProductRef = _firestore.collection('products').doc();
+    final newProductId = newProductRef.id; // Ini adalah ID unik yang baru
+
     String? finalImageUrl;
 
-    // Jika ada gambar yang dipilih, upload dulu (sekarang ke Supabase)
     if (imagePath != null) {
-      finalImageUrl = await _uploadImage(imagePath, id);
+      // Gunakan ID unik yang baru untuk nama file gambar
+      finalImageUrl = await _uploadImage(imagePath, newProductId);
     }
 
     final newProduct = {
+      'barcode': barcode, // Simpan barcode sebagai field biasa
       'name': name,
       'category': category,
-      'stock': initialStock,
-      'capacity': initialStock + 50,
+      'stock': 0,
+      'capacity': 0,
       'imageUrl': finalImageUrl ?? 'https://via.placeholder.com/150',
+      'isActive': true, // <-- TAMBAHKAN BARIS INI
     };
-    // Gunakan 'set' dengan 'doc(id)' untuk membuat dokumen dengan ID custom (barcode)
-    await _firestore.collection('products').doc(id).set(newProduct);
+
+    // 2. Gunakan .set() pada referensi dokumen yang baru dibuat
+    await newProductRef.set(newProduct);
+
     if (initialStock > 0) {
-      await recordIncomingStock(id: id, quantity: initialStock);
+      // 3. Gunakan ID unik yang baru untuk mencatat transaksi
+      await recordIncomingStock(id: newProductId, quantity: initialStock);
     }
   }
 
@@ -368,9 +381,11 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
-  void addStockToProduct({required String id, required int quantity}) {
+  void addStockToProduct({required String barcode, required int quantity}) {
     try {
-      final productIndex = _allProducts.indexWhere((p) => p['id'] == id);
+      final productIndex = _allProducts.indexWhere(
+        (p) => p['barcode'] == barcode,
+      );
       if (productIndex != -1) {
         _allProducts[productIndex]['stock'] += quantity;
         notifyListeners(); // Update UI
@@ -381,62 +396,88 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
-  Future<void> deleteProduct(String productId) async {
+  Future<void> deactivateProduct(String productId) async {
     try {
-      // 1. Ambil referensi dokumen produk untuk mendapatkan URL gambar sebelum dihapus
       final productDocRef = _firestore.collection('products').doc(productId);
-      final productSnapshot = await productDocRef.get();
-      if (!productSnapshot.exists) {
-        print('Produk tidak ditemukan, tidak bisa menghapus.');
-        return;
-      }
-      final imageUrl = productSnapshot.data()?['imageUrl'] as String?;
 
-      // Mulai batch write untuk operasi atomik di Firestore
-      final batch = _firestore.batch();
+      // Cukup update field 'isActive' menjadi false
+      await productDocRef.update({'isActive': false});
 
-      // 2. Hapus semua transaksi masuk (transactions_in) yang terkait
-      final inTransactions =
-          await _firestore
-              .collection('transactions_in')
-              .where('product_id', isEqualTo: productId)
-              .get();
-      for (final doc in inTransactions.docs) {
-        batch.delete(doc.reference);
-      }
-
-      // 3. Hapus semua transaksi keluar (transactions_out) yang terkait
-      final outTransactions =
-          await _firestore
-              .collection('transactions_out')
-              .where('product_id', isEqualTo: productId)
-              .get();
-      for (final doc in outTransactions.docs) {
-        batch.delete(doc.reference);
-      }
-
-      // 4. Hapus dokumen produk itu sendiri
-      batch.delete(productDocRef);
-
-      // 5. Jalankan semua operasi hapus di Firestore
-      await batch.commit();
-
-      // 6. Hapus gambar dari Supabase Storage jika ada
-      if (imageUrl != null && !imageUrl.contains('placeholder.com')) {
-        // Ekstrak path file dari URL lengkap
-        final uri = Uri.parse(imageUrl);
-        final filePath = uri.pathSegments
-            .sublist(uri.pathSegments.indexOf('product_images'))
-            .join('/');
-
-        final supabase = Supabase.instance.client;
-        await supabase.storage.from('product_images').remove([filePath]);
-        print('Gambar berhasil dihapus dari Supabase: $filePath');
-      }
+      print('Produk $productId berhasil dinonaktifkan.');
     } catch (e) {
-      print('Error saat menghapus produk: $e');
-      // Opsional: Lemparkan error agar bisa ditangani di UI
-      // throw Exception('Gagal menghapus produk.');
+      print('Error saat menonaktifkan produk: $e');
     }
   }
+
+  Future<void> activateProduct(String productId) async {
+    try {
+      final productDocRef = _firestore.collection('products').doc(productId);
+
+      // Update field 'isActive' kembali menjadi true
+      await productDocRef.update({'isActive': true});
+
+      print('Produk $productId berhasil diaktifkan kembali.');
+    } catch (e) {
+      print('Error saat mengaktifkan produk: $e');
+    }
+  }
+
+  // Future<void> deleteProduct(String productId) async {
+  //   try {
+  //     // 1. Ambil referensi dokumen produk untuk mendapatkan URL gambar sebelum dihapus
+  //     final productDocRef = _firestore.collection('products').doc(productId);
+  //     final productSnapshot = await productDocRef.get();
+  //     if (!productSnapshot.exists) {
+  //       print('Produk tidak ditemukan, tidak bisa menghapus.');
+  //       return;
+  //     }
+  //     final imageUrl = productSnapshot.data()?['imageUrl'] as String?;
+
+  //     // Mulai batch write untuk operasi atomik di Firestore
+  //     final batch = _firestore.batch();
+
+  //     // 2. Hapus semua transaksi masuk (transactions_in) yang terkait
+  //     final inTransactions =
+  //         await _firestore
+  //             .collection('transactions_in')
+  //             .where('product_id', isEqualTo: productId)
+  //             .get();
+  //     for (final doc in inTransactions.docs) {
+  //       batch.delete(doc.reference);
+  //     }
+
+  //     // 3. Hapus semua transaksi keluar (transactions_out) yang terkait
+  //     final outTransactions =
+  //         await _firestore
+  //             .collection('transactions_out')
+  //             .where('product_id', isEqualTo: productId)
+  //             .get();
+  //     for (final doc in outTransactions.docs) {
+  //       batch.delete(doc.reference);
+  //     }
+
+  //     // 4. Hapus dokumen produk itu sendiri
+  //     batch.delete(productDocRef);
+
+  //     // 5. Jalankan semua operasi hapus di Firestore
+  //     await batch.commit();
+
+  //     // 6. Hapus gambar dari Supabase Storage jika ada
+  //     if (imageUrl != null && !imageUrl.contains('placeholder.com')) {
+  //       // Ekstrak path file dari URL lengkap
+  //       final uri = Uri.parse(imageUrl);
+  //       final filePath = uri.pathSegments
+  //           .sublist(uri.pathSegments.indexOf('product_images'))
+  //           .join('/');
+
+  //       final supabase = Supabase.instance.client;
+  //       await supabase.storage.from('product_images').remove([filePath]);
+  //       print('Gambar berhasil dihapus dari Supabase: $filePath');
+  //     }
+  //   } catch (e) {
+  //     print('Error saat menghapus produk: $e');
+  //     // Opsional: Lemparkan error agar bisa ditangani di UI
+  //     // throw Exception('Gagal menghapus produk.');
+  //   }
+  // }
 }

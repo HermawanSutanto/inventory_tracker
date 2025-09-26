@@ -242,6 +242,7 @@ class _MainListProduct extends StatelessWidget {
                 builder:
                     (ctx) => BottomDetailProduct(
                       productName: product['name'],
+                      barcode: product['barcode'],
                       id: product['id'],
                       category: product['category'],
                       stock: product['stock'],
@@ -261,10 +262,15 @@ class _MainListProduct extends StatelessWidget {
                       },
                       onDetailsSaved: (updatedData) {
                         productProvider.updateProductDetails(updatedData);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Detail produk berhasil diperbarui!'),
+                          ),
+                        );
                       },
                       onDelete: (productId) {
                         productProvider
-                            .deleteProduct(productId)
+                            .deactivateProduct(productId)
                             .then((_) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -287,6 +293,7 @@ class _MainListProduct extends StatelessWidget {
             },
             child: ItemList(
               productName: product['name'],
+              barcode: product['barcode'],
               stock: product['stock'],
               category: product['category'],
               id: product['id'],

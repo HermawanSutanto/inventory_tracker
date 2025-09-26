@@ -12,6 +12,8 @@ class BottomDetailProduct extends StatefulWidget {
   final String productName;
   final String id;
   final String category;
+  final String barcode; // <-- TAMBAHKAN INI
+
   final int stock;
   final int capacity;
   final String imageUrl;
@@ -30,6 +32,8 @@ class BottomDetailProduct extends StatefulWidget {
     required this.productName,
     required this.category,
     required this.id,
+    required this.barcode,
+
     required this.stock,
     required this.capacity,
     required this.imageUrl,
@@ -55,6 +59,7 @@ class _BottomDetailProductState extends State<BottomDetailProduct> {
   late TextEditingController _categoryController;
   late TextEditingController _capacityController;
   late AdjustmentType _adjustmentType; // <-- State baru untuk tipe penyesuaian
+  late TextEditingController _barcodeController; // <-- TAMBAHKAN INI
 
   // Controller untuk form edit detail (akan digunakan nanti)
   // late TextEditingController _nameController;
@@ -73,6 +78,9 @@ class _BottomDetailProductState extends State<BottomDetailProduct> {
     _adjustmentType = AdjustmentType.stockOut; // Default ke barang keluar
 
     _stockAdjustmentController = TextEditingController(text: '0');
+    _barcodeController = TextEditingController(
+      text: widget.barcode,
+    ); // <-- TAMBAHKAN INI
 
     _nameController = TextEditingController(text: widget.productName);
     _categoryController = TextEditingController(text: widget.category);
@@ -84,6 +92,8 @@ class _BottomDetailProductState extends State<BottomDetailProduct> {
   @override
   void dispose() {
     _stockAdjustmentController.dispose();
+    _barcodeController.dispose(); // <-- TAMBAHKAN INI
+
     _nameController.dispose();
     _categoryController.dispose();
     _capacityController.dispose();
@@ -221,8 +231,9 @@ class _BottomDetailProductState extends State<BottomDetailProduct> {
         return [
           _buildDisplayDetails(
             productName: widget.productName,
-            category: widget.category,
             id: widget.id,
+            category: widget.category,
+            barcode: widget.barcode,
             stock: widget.stock,
             capacity: widget.capacity,
           ),
@@ -269,13 +280,19 @@ class _BottomDetailProductState extends State<BottomDetailProduct> {
     required String productName,
     required String category,
     required String id,
+    required String barcode,
+
     required int stock,
     required int capacity,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _DetailRow(title: 'Barcode', value: id, icon: FontAwesomeIcons.barcode),
+        _DetailRow(
+          title: 'Barcode',
+          value: barcode,
+          icon: FontAwesomeIcons.barcode,
+        ),
         _DetailRow(
           title: 'Nama Barang',
           value: productName,
@@ -482,20 +499,20 @@ class _BottomDetailProductState extends State<BottomDetailProduct> {
       children: [
         _InputForm(
           hintText: 'Barcode',
-          initialValue: widget.id,
-          enabled: false,
+          controller: _barcodeController, // <-- GUNAKAN CONTROLLER
+          initialValue: widget.barcode,
           prefixIcon: FontAwesomeIcons.barcode,
         ),
         const SizedBox(height: 10),
         _InputForm(
+          controller: _nameController, // <-- GUNAKAN CONTROLLER
           hintText: 'Nama barang',
-          initialValue: widget.productName,
           prefixIcon: CupertinoIcons.tag_fill,
         ),
         const SizedBox(height: 10),
         _InputForm(
+          controller: _categoryController, // <-- GUNAKAN CONTROLLER
           hintText: 'Kategori',
-          initialValue: widget.category,
           prefixIcon: FontAwesomeIcons.shapes,
         ),
       ],
@@ -516,6 +533,18 @@ class _BottomDetailProductState extends State<BottomDetailProduct> {
           child: ElevatedButton(
             child: const Text('Simpan Detail'),
             onPressed: () {
+              // 1. Buat Map berisi data yang diperbarui
+              final updatedData = {
+                'id':
+                    widget.id, // Penting untuk tahu dokumen mana yang diupdate
+                'name': _nameController.text,
+                'barcode': _barcodeController.text, // <-- KIRIM BARCODE BARU
+
+                'category': _categoryController.text,
+                // 'capacity': int.tryParse(_capacityController.text) ?? widget.capacity,
+              };
+              widget.onDetailsSaved?.call(updatedData);
+
               // TODO: Panggil callback onDetailsSaved dengan data dari controller
               // final data = { 'name': _nameController.text, ... };
               // widget.onDetailsSaved?.call(data);
@@ -586,7 +615,7 @@ class _InputForm extends StatelessWidget {
   final String? initialValue; // Tambahkan ini
   final bool enabled; // Tambahkan ini
   final ValueChanged<String>? onChanged;
-
+  final TextEditingController? controller; // <-- TAMBAHKAN INI
   const _InputForm({
     required this.hintText,
     required this.prefixIcon,
@@ -594,13 +623,15 @@ class _InputForm extends StatelessWidget {
     this.initialValue, // Tambahkan ini
     this.enabled = true, // Tambahkan ini
     this.onChanged,
+    this.controller, // <-- TAMBAHKAN INI
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      controller: controller, // <-- GUNAKAN CONTROLLER DI SINI
       onChanged: onChanged,
-      initialValue: initialValue, // Gunakan ini
+      // initialValue: initialValue, // Gunakan ini
       decoration: InputDecoration(
         filled: true,
         fillColor: Colors.white,

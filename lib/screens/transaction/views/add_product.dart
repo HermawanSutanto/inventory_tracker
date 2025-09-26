@@ -116,7 +116,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
       if (_formMode == FormMode.newProduct) {
         productProvider.addNewProduct(
-          id: barcode,
+          barcode: barcode,
           name: _nameController.text,
           category: _categoryController.text,
           initialStock: quantity,
@@ -126,7 +126,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           const SnackBar(content: Text('Produk baru berhasil ditambahkan!')),
         );
       } else {
-        productProvider.addStockToProduct(id: barcode, quantity: quantity);
+        productProvider.addStockToProduct(barcode: barcode, quantity: quantity);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Stok berhasil ditambahkan!')),
         );

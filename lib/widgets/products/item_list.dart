@@ -8,6 +8,8 @@ class ItemList extends StatelessWidget {
   final String productName;
   final String category;
   final String id;
+  final String barcode;
+
   final int stock;
   final int capacity;
   final String imageUrl;
@@ -17,6 +19,8 @@ class ItemList extends StatelessWidget {
     required this.productName,
     required this.category,
     required this.id,
+    required this.barcode,
+
     required this.stock,
     required this.capacity,
     required this.imageUrl,
@@ -41,6 +45,7 @@ class ItemList extends StatelessWidget {
               child: _ItemDetails(
                 productName: productName,
                 category: category,
+                barcode: barcode,
                 id: id,
                 stock: stock,
                 capacity: capacity,
@@ -57,6 +62,8 @@ class ItemList extends StatelessWidget {
 class _ItemDetails extends StatelessWidget {
   final String productName;
   final String id;
+  final String barcode;
+
   final String category;
   final int stock;
   final int capacity;
@@ -64,6 +71,8 @@ class _ItemDetails extends StatelessWidget {
   const _ItemDetails({
     required this.productName,
     required this.category,
+    required this.barcode,
+
     required this.id,
     required this.stock,
     required this.capacity,
@@ -104,7 +113,7 @@ class _ItemDetails extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "ID $id",
+                    "ID $barcode",
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,

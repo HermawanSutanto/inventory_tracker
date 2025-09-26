@@ -8,6 +8,7 @@ void showSimpleBottomSheet(
   required String category,
   required String id,
   required String imageUrl,
+  required String barcode,
   required int stock,
   required int capacity,
   bool initialStock = false, // Tambahkan parameter ini
@@ -19,6 +20,8 @@ void showSimpleBottomSheet(
       return BottomDetailProduct(
         productName: productName,
         category: category,
+        barcode: barcode,
+
         id: id,
         stock: stock,
         capacity: capacity,

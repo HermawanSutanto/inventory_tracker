@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:inventory_tracker/providers/product_provider.dart';
 import 'package:inventory_tracker/screens/transaction/views/add_product.dart';
 import 'package:inventory_tracker/screens/transaction/views/scan_barcode.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -7,10 +8,11 @@ import 'package:inventory_tracker/screens/home/views/main_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:inventory_tracker/screens/products/views/product_list.dart';
+import 'package:inventory_tracker/widgets/products/bottom_sheet/bottom_detail_product.dart';
 import 'package:inventory_tracker/widgets/products/bottom_sheet/simple_bottom_sheet.dart';
+import 'package:provider/provider.dart';
 
 // Asumsi: Anda memiliki file 'data.dart' dengan list allProducts
-import 'package:inventory_tracker/data/data.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,13 +28,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Color unselectedItem = Colors.grey;
 
   // Fungsi pembantu untuk mencari produk berdasarkan ID
-  Map<String, dynamic>? _findProductById(String id) {
-    try {
-      return allProducts.firstWhere((product) => product['id'] == id);
-    } catch (e) {
-      return null;
-    }
-  }
+  // Map<String, dynamic>? _findProductById(String barcode) {
+  //   try {
+  //     return allProducts.firstWhere((product) => product['id'] == barcode);
+  //   } catch (e) {
+  //     return null;
+  //   }
+  // }
 
   void _navigateToScanBarcodeThenShowDetail() async {
     final barcodeResult = await Navigator.push(
@@ -40,25 +42,53 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(builder: (context) => const ScanBarcode()),
     );
 
-    if (barcodeResult != null) {
-      final productData = _findProductById(barcodeResult);
+    if (barcodeResult != null && mounted) {
+      // 'mounted' check is a good practice
+      // 1. Ambil ProductProvider dari context
+      // Gunakan context.read karena kita hanya memanggil fungsi, tidak perlu me-listen perubahan
+      final provider = context.read<ProductProvider>();
+
+      // 2. Gunakan metode dari provider untuk mencari produk berdasarkan barcode
+      final productData = provider.findProductByBarcode(barcodeResult);
+
       if (productData != null) {
         // Jika produk ditemukan, tampilkan bottom sheet
-        showSimpleBottomSheet(
-          context,
-          initialStock: true,
-          productName: productData['name']!,
-          category: productData['category']!,
-          id: productData['id']!,
-          stock: productData['stock']!,
-          capacity: productData['capacity']!,
-          imageUrl: productData['imageUrl'],
+        // showSimpleBottomSheet sekarang akan menggunakan BottomDetailProduct
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder:
+              (ctx) => BottomDetailProduct(
+                // Data dari productData sudah sesuai
+                productName: productData['name']!,
+                category: productData['category']!,
+                id: productData['id']!, // Ini adalah ID Unik Firestore
+                barcode: productData['barcode']!, // Ini adalah barcode
+                stock: productData['stock']!,
+                capacity: productData['capacity']!,
+                imageUrl: productData['imageUrl'],
+                initialStock: true, // Agar langsung ke mode 'adjustStock'
+                // Sambungkan callback ke provider
+                onStockOut:
+                    (productId, quantity) => provider.recordOutgoingStock(
+                      id: productId,
+                      quantity: quantity,
+                    ),
+                onStockIn:
+                    (productId, quantity) => provider.recordIncomingStock(
+                      id: productId,
+                      quantity: quantity,
+                    ),
+                onDelete: (productId) => provider.deactivateProduct(productId),
+                onDetailsSaved:
+                    (updatedData) => provider.updateProductDetails(updatedData),
+              ),
         );
       } else {
-        // Jika produk tidak ditemukan, tampilkan dialog konfirmasi
+        // Logika jika produk tidak ditemukan tetap sama, ini sudah benar.
         showCupertinoDialog(
           context: context,
-          builder: (context) {
+          builder: (dialogContext) {
             return CupertinoAlertDialog(
               title: const Text('Produk Tidak Ditemukan'),
               content: Text(
@@ -67,13 +97,12 @@ class _HomeScreenState extends State<HomeScreen> {
               actions: [
                 CupertinoDialogAction(
                   child: const Text('Batal'),
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(dialogContext),
                 ),
                 CupertinoDialogAction(
                   child: const Text('Tambah Produk Baru'),
                   onPressed: () {
-                    Navigator.pop(context); // Tutup dialog
-                    // Pindah ke halaman AddTransaction dan kirim data barcode
+                    Navigator.pop(dialogContext); // Tutup dialog
                     Navigator.push(
                       context,
                       MaterialPageRoute(

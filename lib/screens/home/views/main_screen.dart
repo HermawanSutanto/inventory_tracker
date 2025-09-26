@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:inventory_tracker/data/data.dart';
 import 'package:inventory_tracker/providers/product_provider.dart';
 import 'package:inventory_tracker/screens/settings/settings_screen.dart';
 import 'package:inventory_tracker/widgets/home/summary_card.dart';
